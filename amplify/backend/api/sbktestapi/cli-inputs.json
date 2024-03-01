@@ -1,0 +1,12 @@
+{
+  "version": 1,
+  "paths": {
+    "/schedules/{id}": {
+      "name": "/schedules/{id}",
+      "lambdaFunction": "sbkreacttest2f446cae",
+      "permissions": {
+        "setting": "open"
+      }
+    }
+  }
+}

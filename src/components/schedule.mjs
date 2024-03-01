@@ -1,106 +1,103 @@
-import React, { useState, useEffect } from 'react';
-import { getAllSchedules, getSchedule, putSchedule, deleteSchedule } from '../lambdas/invoke.mjs';
+import { useState, useEffect } from 'react'
+import { getAllSchedules, putSchedule } from '../lambdas/invoke.mjs'
 
-function Schedule() {
-
-    const [id, setId] = useState('1');
-    const [name, setName] = useState('cagri');
-    const [startTime, setStartTime] = useState('12:00');
-    const [wateringDuration, setWateringDuration] = useState('60');
-    const [days, setDays] = useState([]);
-    const [active, setActive] = useState(true);
-    const [schedule, setSchedule] = useState({ id: 1, name: "test", startTime: "12:00", wateringDuration: 10, days: days, active: true });
-    const [schedules, setSchedules] = useState([]);
-
-    const getAllSchedulesFunction = async () => {
-        const data = await getAllSchedules();
-        let schedules = [];
-        for (const key in data) {
-            schedules.push(data[key]);
-        }
-        setSchedules(schedules);
-
-    };
-    const getScheduleFunction = async () => {
-        const data = await getSchedule(id);
-        setSchedule(data);
-    }
-    const putScheduleFunction = async () => {
-        const data = await putSchedule({ id, name, startTime, wateringDuration, days, active });
-        setSchedule(data);
-    }
-    const deleteScheduleFunction = async (id) => {
-        console.log(id);
-        const data = await deleteSchedule(id);
-        setSchedule(data);
-    }
+const ScheduleComponent = () => {
+    const [schedulesArray, setSchedulesArray] = useState([])
+    const [scheduleId, setScheduleId] = useState('2')
+    const [scheduleName, setScheduleName] = useState('cagri')
+    const [startTime, setStartTime] = useState('12:00')
+    const [wateringDuration, setWateringDuration] = useState('60')
+    const [days, setDays] = useState(["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"])
+    const [active, setActive] = useState(false)
+    const [deviceId, setDeviceId] = useState('2')
 
     useEffect(() => {
-        getAllSchedulesFunction();
+        getSchedulesArray(null,deviceId);
     }, []);
 
-    useEffect(() => {
-        setSchedule({ id, name, startTime, wateringDuration, days, active });
-    }, [id, name, startTime, wateringDuration, days, active]);
+
+    const getSchedulesArray = async (id, deviceId) => {
+        let message = "";
+        if (deviceId === undefined) {
+            message = "deviceId is required";
+            console.log(message);
+            return;
+        }
+        const response = await getAllSchedules(id, deviceId);
+        if (response === null) {
+            message = "Could not get schedules";
+            console.log(response.statusCode, response.body);
+        }
+        let schedulesArray = [];
+        for (let key in response.body) {
+
+            schedulesArray.push(response.body[key]);
+        }
+        setSchedulesArray(schedulesArray);
+    };
+
+    const putScheduleFunction = async (id, deviceId) => {
+
+        deviceId = "2";
+        let message = "";
+        let schedule = {
+            id: id,
+            name: scheduleName,
+            startTime: startTime,
+            wateringDuration: wateringDuration,
+            days: days,
+            active: active,
+        }
+        const response = await putSchedule(schedule, deviceId);
+        if (response === null) {
+            message = "Could not put schedule";
+            console.log(response.statusCode, response.body);
+        }
+        console.log("response: ", response);
+        
+    }
 
     return (
-        <div>
-            <h1>Schedule</h1>
-            <input type="text" placeholder="ID" onChange={(e) => setId(e.target.value)} />
-            <input type="text" placeholder="Name" onChange={(e) => setName(e.target.value)} />
-            <input type="time" onChange={(e) => setStartTime(e.target.value)} />
-            <input type="number" placeholder="Watering Duration" onChange={(e) => setWateringDuration(e.target.value)} />
+        <div className="schedule">
+            <h1>{deviceId}</h1>
+            <input type="text" placeholder="Device ID" value={deviceId} onChange={(e) => setDeviceId(e.target.value)} />
+            <h1>New Schedule</h1>
             <div>
-                <p>Days</p>
-                {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map((item, index) => (
-                    <div key={index}>
-                        <input type="checkbox" value={item} onChange={(e) => {
-                            if (e.target.checked) {
-                                setDays([...days, e.target.value]);
-                            } else {
-                                setDays(days.filter(day => day !== e.target.value));
-                            }
-                        }} />
-                        <label>{item}</label>
-                    </div>
-
-                ))}
+                <input type="text" placeholder="Schedule ID" value={scheduleId} onChange={(e) => setScheduleId(e.target.value)} />
+                <input type="text" placeholder="Schedule Name" value={scheduleName} onChange={(e) => setScheduleName(e.target.value)} />
+                <input type="text" placeholder="Start Time" value={startTime} onChange={(e) => setStartTime(e.target.value)} />
+                <input type="text" placeholder="Watering Duration" value={wateringDuration} onChange={(e) => setWateringDuration(e.target.value)} />
+                <input type="text" placeholder="Days" value={days} onChange={(e) => setDays(e.target.value)} />
+                <input type="text" placeholder="Active" value={active} onChange={(e) => setActive(e.target.value)} />
+                <button onClick={() => putScheduleFunction(scheduleId, deviceId)}>Create Schedule</button>
             </div>
-            <input placeholder='Active' type="checkbox" onChange={(e) => setActive(e.target.checked)} />
-            <button onClick={getAllSchedulesFunction}>Get All</button>
-            <button onClick={getScheduleFunction}>Get</button>
-            <button onClick={putScheduleFunction}>Add</button>
-            <p>{JSON.stringify(schedule)}</p>
+            <h1>Update Schedule</h1>
+            <div>
+                <input type="text" placeholder="Schedule ID" value={scheduleId} onChange={(e) => setScheduleId(e.target.value)} />
+                <button onClick={() => putScheduleFunction(scheduleId, deviceId)}>Update Schedule</button>
+            </div>
 
-            <div>{schedules.map((item, index) => (
-                <div key={index}>
-                    <p>{item.id} yes no     </p>
-                    <p>{item.deviceId}</p>
-                    <p>{item.name}</p>
-                    <p>{item.startTime}</p>
-                    <p>{item.wateringDuration}</p>
-                    <p>{item.active}</p>
-                    <p>{JSON.stringify(item.days)}</p>
-                    <button onClick={() => {
-                        setId(item.id);
-                        setName(item.name);
-                        setStartTime(item.startTime);
-                        setWateringDuration(item.wateringDuration);
-                        setDays(item.days);
-                        setActive(item.active);
-                        deleteScheduleFunction(item.id);
-                    }}>Delete</button>
-                    <br />
-                    <div>{JSON.stringify(schedules)} </div>
+
+            <h1>Schedules</h1>
+            <div>
+                <button onClick={() => getSchedulesArray(null,deviceId)}>Get Schedules</button>
+                <div>
+                    {schedulesArray.map((schedule) => (
+                        <div key={schedule.id}>
+                            <h2>{schedule.name}</h2>
+                            <p>Start Time: {schedule.startTime}</p>
+                            <p>Watering Duration: {schedule.wateringDuration}</p>
+                            <p>Days: {JSON.stringify(schedule.days)}</p>
+                            <p>Active: {schedule.active ? 'Yes' : 'No'}</p>
+                            <p>Device ID: {schedule.deviceId}</p>
+                            <button onClick={() => getSchedulesArray(schedule.id, schedule.deviceId)}>Get Schedule</button>
+                        </div>
+                    ))}
+
                 </div>
-            ))}</div>
-            <br />
-
-
+            </div>
         </div>
-    );
-
-
+    )
 }
 
-export default Schedule;
+export default ScheduleComponent

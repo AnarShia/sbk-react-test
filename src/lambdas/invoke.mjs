@@ -1,72 +1,65 @@
 
-const url = "https://5rk9a2pa9e.execute-api.us-east-1.amazonaws.com";
-async function getSchedule(id) {
-    const link = url + '/test/schedules/' + id;
+const url = "https://5rk9a2pa9e.execute-api.us-east-1.amazonaws.com/prod/schedules";
 
-    const response = await fetch(link);
-    const data = await response.json();
-    return data;
-}
+const getAllSchedules = async (id,deviceId) => {
+    
+    let link = url+"/"+deviceId;
+    let response;
 
-async function getAllSchedules() {
-
-    const link = url + '/test/schedules';
-
-    const response = await fetch(link, {
-        method: 'GET',
-    });
-    const data = await response.json();
-    console.log(data);
-    let schedules= {};
-    schedules = {
-        body: data.body,
-        deviceId: data.deviceId
-    }
-
-    return schedules;
-}
-
-async function deleteSchedule(id) {
-    try {
-        const link = url + '/test/schedules/' + id;
-        const params = {
-            id: id
+    const params = {
+        body:{
+            "id": id,
+        },
+        pathParameters: {
+            "id": deviceId
         }
-        const response = await fetch(link, {
-            method: 'DELETE',
+    }
+    
+    console.log("link: ", link);
+    try {
+        response = await fetch(link, {
+            method: 'POST',
             headers: {
-                'Content-Type': 'application/json',
+                'Content-Type': 'application/json'
             },
             body: JSON.stringify(params)
         });
-        const data = await response.json();
-        return data;
+        response = await response.json();
 
-    } catch (error) {
-        console.log(error);
     }
-
+    catch (error) {
+        console.error("error: ", error);
+    }
+    return response;
 }
 
+const putSchedule = async (schedule, deviceId) => {
+    let link = url+"/"+deviceId;
+    let response;
 
-
-async function putSchedule(schedule) {
-
-    const link = url + '/test/schedules';
-    const body = {
-        body: schedule
+    const params = {
+        body: schedule,
+        pathParameters: {
+            "id": deviceId
+        }
     }
-    const response = await fetch(link, {
-        method: 'PUT',
-        headers: {
-            'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(body)
-    });
-    const data = await response.json();
-    return data;
+
+    try {
+        response = await fetch(link, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(params)
+        });
+        response = await response.json();
+
+    }
+    catch (error) {
+        console.error("error: ", error);
+    }
+    return response;
 }
+export { getAllSchedules, putSchedule };
 
-
-export { getSchedule, getAllSchedules, deleteSchedule, putSchedule };
 
