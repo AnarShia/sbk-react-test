@@ -59,6 +59,7 @@ const ScheduleComponent = () => {
 
     return (
         <div className="schedule">
+            <h1>Oktay Gotune koyim</h1>
             <h1>{deviceId}</h1>
             <input type="text" placeholder="Device ID" value={deviceId} onChange={(e) => setDeviceId(e.target.value)} />
             <h1>New Schedule</h1>
