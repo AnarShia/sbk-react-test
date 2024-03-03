@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { getAllSchedules, putSchedule } from '../lambdas/invoke.mjs'
+import { deleteSchedule, getAllSchedules, putSchedule } from '../lambdas/invoke.mjs'
 
 const ScheduleComponent = () => {
     const [schedulesArray, setSchedulesArray] = useState([])
@@ -11,9 +11,6 @@ const ScheduleComponent = () => {
     const [active, setActive] = useState(false)
     const [deviceId, setDeviceId] = useState('2')
 
-    useEffect(() => {
-        getSchedulesArray(null,deviceId);
-    }, []);
 
 
     const getSchedulesArray = async (id, deviceId) => {
@@ -51,11 +48,36 @@ const ScheduleComponent = () => {
         const response = await putSchedule(schedule, deviceId);
         if (response === null) {
             message = "Could not put schedule";
-            console.log(response.statusCode, response.body);
+            console.log(message + response.statusCode, response.body);
+            return;
         }
         console.log("response: ", response);
-        
+        if (response.body.item) {
+            getSchedulesArray(null, deviceId);
+        }
+
     }
+    const deleteScheduleFunction = async (id, deviceId) => {
+
+        deviceId = "2";
+        let message = "";
+        if (id == null && id === '') {
+            return;
+        }
+
+        const response = await deleteSchedule(id, deviceId);
+        if (response === null) {
+            message = "Could not delete schedule";
+            console.log(message, response.statusCode, response.body);
+        }
+        console.log("response: ", response);
+
+        setSchedulesArray(schedulesArray.filter((schedule) => schedule.id !== id));
+    }
+
+    useEffect(() => {
+        getSchedulesArray(null, deviceId);
+    }, [deviceId]);
 
     return (
         <div className="schedule">
@@ -80,17 +102,17 @@ const ScheduleComponent = () => {
 
             <h1>Schedules</h1>
             <div>
-                <button onClick={() => getSchedulesArray(null,deviceId)}>Get Schedules</button>
+                <button onClick={() => getSchedulesArray(null, deviceId)}>Get Schedules</button>
                 <div>
                     {schedulesArray.map((schedule) => (
                         <div key={schedule.id}>
                             <h2>{schedule.name}</h2>
+                            <p>Schedule ID: {schedule.id}</p>
                             <p>Start Time: {schedule.startTime}</p>
                             <p>Watering Duration: {schedule.wateringDuration}</p>
                             <p>Days: {JSON.stringify(schedule.days)}</p>
                             <p>Active: {schedule.active ? 'Yes' : 'No'}</p>
-                            <p>Device ID: {schedule.deviceId}</p>
-                            <button onClick={() => getSchedulesArray(schedule.id, schedule.deviceId)}>Get Schedule</button>
+                            <button onClick={() => deleteScheduleFunction(schedule.id, schedule.deviceId)}>Delete Schedule</button>
                         </div>
                     ))}
 
