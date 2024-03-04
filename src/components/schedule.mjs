@@ -10,8 +10,8 @@ const ScheduleComponent = () => {
     const [days, setDays] = useState(["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"])
     const [active, setActive] = useState(false)
     const [deviceId, setDeviceId] = useState('2')
-
-
+    const [schedule, setSchedule] = useState([{}])
+   
 
     const getSchedulesArray = async (id, deviceId) => {
         let message = "";
@@ -25,20 +25,29 @@ const ScheduleComponent = () => {
             message = "Could not get schedules";
             console.log(response.statusCode, response.body);
         }
-        let schedulesArray = [];
-        for (let key in response.body) {
-
-            schedulesArray.push(response.body[key]);
+        if(!id){
+            let schedulesArray = [];
+            console.log("response: ", response);
+            const schedules = response.body.schedules;
+            for (let key in schedules) {
+    
+                schedulesArray.push(schedules[key]);
+            }
+            setSchedulesArray(schedulesArray);
         }
-        setSchedulesArray(schedulesArray);
+        else{
+            console.log("response: ", response);
+            const schedule = response.body.schedules;
+            setSchedule(schedule);
+        }
     };
 
-    const putScheduleFunction = async (id, deviceId) => {
+    
+    const putScheduleFunction = async () => {
 
-        deviceId = "2";
         let message = "";
         let schedule = {
-            id: id,
+            id: scheduleId,
             name: scheduleName,
             startTime: startTime,
             wateringDuration: wateringDuration,
@@ -51,10 +60,7 @@ const ScheduleComponent = () => {
             console.log(message + response.statusCode, response.body);
             return;
         }
-        console.log("response: ", response);
-        if (response.body.item) {
-            getSchedulesArray(null, deviceId);
-        }
+        console.log("putscheduleresponse: ", response);
 
     }
     const deleteScheduleFunction = async (id, deviceId) => {
@@ -79,6 +85,10 @@ const ScheduleComponent = () => {
         getSchedulesArray(null, deviceId);
     }, [deviceId]);
 
+    useEffect(() => {
+        getSchedulesArray(scheduleId, deviceId);
+    }, [scheduleId]);
+
     return (
         <div className="schedule">
             <h1>{deviceId}</h1>
@@ -87,7 +97,7 @@ const ScheduleComponent = () => {
             <div>
                 <input type="text" placeholder="Schedule ID" value={scheduleId} onChange={(e) => setScheduleId(e.target.value)} />
                 <input type="text" placeholder="Schedule Name" value={scheduleName} onChange={(e) => setScheduleName(e.target.value)} />
-                <input type="text" placeholder="Start Time" value={startTime} onChange={(e) => setStartTime(e.target.value)} />
+                <input type="time" placeholder="Start Time" value={startTime} onChange={(e) => setStartTime(e.target.value)} />
                 <input type="text" placeholder="Watering Duration" value={wateringDuration} onChange={(e) => setWateringDuration(e.target.value)} />
                 <input type="text" placeholder="Days" value={days} onChange={(e) => setDays(e.target.value)} />
                 <input type="text" placeholder="Active" value={active} onChange={(e) => setActive(e.target.value)} />
@@ -97,8 +107,10 @@ const ScheduleComponent = () => {
             <div>
                 <input type="text" placeholder="Schedule ID" value={scheduleId} onChange={(e) => setScheduleId(e.target.value)} />
                 <button onClick={() => putScheduleFunction(scheduleId, deviceId)}>Update Schedule</button>
+                <button onClick={() => getSchedulesArray(scheduleId, deviceId)}>Get Schedule</button>
             </div>
-
+            <h1>Schedule</h1>
+            <div>{JSON.stringify(schedule)}</div>
 
             <h1>Schedules</h1>
             <div>
